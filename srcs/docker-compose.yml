@@ -1,0 +1,101 @@
+version: '3'
+
+volumes:
+  mdb:
+    name: v-mariadb
+    driver_opts:
+      o: bind
+      type: none
+      device: /home/cogata/data/mariadb-db
+
+  wpdb:
+    name: v-wordpress
+    driver_opts:
+      o: bind
+      type: none
+      device: /home/cogata/data/wordpress-db
+
+networks:
+  inception_network:
+    name: inception_network
+    driver: bridge
+
+services:
+
+  nginx:
+    image: nginx:42project
+    container_name: nginx
+    env_file:
+      - .env
+    environment:
+      - SERVER_NAME
+    ports:
+      - 443:443
+    build:
+      args:
+        - SERVER_NAME=${SERVER_NAME}
+      context: requirements/nginx
+      dockerfile: Dockerfile
+    depends_on:
+      - wordpress
+    volumes:
+      - wpdb:/var/www/html
+    networks:
+      - inception_network
+    restart: always
+
+  wordpress:
+    image: wordpress:42project
+    container_name: wordpress
+    env_file:
+      - .env
+    environment:
+      - SERVER_NAME
+      - ROOT_USER
+      - ROOT_PW
+      - ROOT_MAIL
+      - WP_USER
+      - WP_MAIL
+      - WP_PW
+      - WP_DB
+    build:
+      args:
+        - WP_DB=${WP_DB}
+        - WP_USER=${WP_USER}
+        - WP_PW=${WP_PW}
+        - WP_MAIL=${WP_MAIL}
+        - ROOT_MAIL=${ROOT_MAIL}
+        - ROOT_PW=${ROOT_PW}
+        - ROOT_USER=${ROOT_USER}
+        - SERVER_NAME=${SERVER_NAME}
+      context: requirements/wordpress
+      dockerfile: Dockerfile
+    depends_on:
+      - mariadb
+    volumes:
+      - wpdb:/var/www/html
+    networks:
+      - inception_network
+    restart: always
+
+  mariadb:
+    image: mariadb:42project
+    container_name: mariadb
+    env_file:
+      - .env
+    environment:
+      - WP_DB
+      - WP_USER
+      - WP_PW
+    build:
+      context: requirements/mariadb
+      dockerfile: Dockerfile
+      args:
+        - WP_DB=${WP_DB}
+        - WP_USER=${WP_USER}
+        - WP_PW=${WP_PW}
+    volumes:
+      - mdb:/var/lib/mysql
+    networks:
+      - inception_network
+    restart: always
