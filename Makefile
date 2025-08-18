@@ -1,17 +1,19 @@
 VOLUME_PATH=/home/cogata/data
 COMPOSE=./srcs/docker-compose.yml
 
-all: permission config up
+all: permission env-check config up
 
 permission:
-	@/usr/bin/echo -e '\033[1;33mSUDO PERMISSION!\033[0m'
-	@sudo /usr/bin/echo -e '\033[1;31mWORKING\033[0m'
+	@/usr/bin/echo -e '\033[1;33mChecking sudo permission...\033[0m'
+	@sudo /usr/bin/echo -e '\033[1;32mSudo working...\033[0m'
 
-config:
+env-check:
 	@if [ ! -f ./srcs/.env ]; then \
-		echo "No .env file in this directory" \
+		sudo echo -e '\033[1;31mError: .env file not found in ./srcs/.\033[0m'; \
 		exit 1; \
 	fi
+
+config:
 	@sudo chmod 666 /etc/hosts
 	@if ! grep -q 'cogata' /etc/hosts; then \
 		sudo echo '127.0.0.1 cogata.42.fr' >> /etc/hosts; \
@@ -46,4 +48,4 @@ prune: down
 
 re: prune all
 
-.PHONY: all permission config up down prune re
+.PHONY: all permission env-check config up down prune re
