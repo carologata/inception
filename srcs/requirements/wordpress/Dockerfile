@@ -9,6 +9,10 @@ ARG WP_MAIL
 ARG WP_PW
 ARG WP_DB
 
+# Initial system update - updates package list and installs essential packages
+# (lsb-release, apt-transport-https, ca-certificates, wget)
+# Adding PHP repository - downloads GPG key and adds Sury's PHP repository
+# to get more recent PHP versions than default Ubuntu repositories
 RUN apt update && apt install -y \
     lsb-release apt-transport-https ca-certificates wget \
     && wget -qO /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg \
@@ -20,8 +24,7 @@ RUN apt update && apt install -y \
     mariadb-client \
     wordpress \
     wget \
-    && \
-    apt clean
+    && apt clean
 
 RUN wget -O /usr/bin/wp \
     https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
@@ -34,8 +37,8 @@ RUN mkdir -p /run/php
 
 COPY ./conf/www.conf                        /etc/php/8.1/fpm/pool.d/www.conf
 COPY ./conf/wp-config.php                   /var/www/html/wp-config.php
-COPY ./tools/init-only-if-mariadb-is-up.sh  /tmp/script.sh
+COPY ./tools/init.sh  /tmp/init.sh
 
-RUN chmod 777 /tmp/script.sh
+RUN chmod 777 /tmp/init.sh
 
-ENTRYPOINT [ "/tmp/script.sh" ]
+ENTRYPOINT [ "/tmp/init.sh" ]

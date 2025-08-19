@@ -1,15 +1,15 @@
 VOLUME_PATH=/home/cogata/data
 COMPOSE=./srcs/docker-compose.yml
 
-all: permission env-check config up
+all: permission-check env-check config up
 
-permission:
-	@/usr/bin/echo -e '\033[1;33mChecking sudo permission...\033[0m'
-	@sudo /usr/bin/echo -e '\033[1;32mSudo working...\033[0m'
+permission-check:
+	@/usr/bin/echo "Checking sudo permission..."
+	@sudo /usr/bin/echo "Sudo working..."
 
 env-check:
 	@if [ ! -f ./srcs/.env ]; then \
-		sudo echo -e '\033[1;31mError: .env file not found in ./srcs/.\033[0m'; \
+		sudo echo "Error: .env file not found in ./srcs/."; \
 		exit 1; \
 	fi
 
@@ -25,20 +25,23 @@ config:
 		sudo mkdir -p ${VOLUME_PATH}/mariadb-db; \
 	fi
 
+# Starts the Docker containers defined in docker-compose.yml, builds images, and runs in detached mode.
 up:
 	@if [ -z "$$(docker-compose -f ${COMPOSE} ps 2> /dev/null | grep Up)" ]; then \
 		docker-compose -f ${COMPOSE} up; \
 	else \
-		echo "There is containers up, please KILL them :)"; \
+		echo "Error: There is containers up, please kill them."; \
 	fi
 
+# The down target stops and completely removes the Docker containers, networks, and resources defined in your docker-compose.yml.
 down:
 	@if [ -n "$$(docker-compose -f ${COMPOSE} images -q 2> /dev/null)" ]; then \
 		docker-compose -f ${COMPOSE} down; \
 	else \
-		echo "No images to delete!"; \
+		echo "No images to delete."; \
 	fi
 
+# Prunes everything (images, networks, volumes, containers)
 prune: down
 	@if [ -n "$$(docker volume ls -q)" ]; then \
 		docker volume rm $(shell docker volume ls -q); \
@@ -46,6 +49,18 @@ prune: down
 	@sudo rm -fr ${VOLUME_PATH}/*
 	@docker system prune -f -a
 
+# Starts the containers again
+start:
+	docker start nginx wordpress mariadb; 
+
+# Stops running containers without removing them.
+stop:
+	docker stop nginx wordpress mariadb; 
+
+# Stops and starts the containers again
+restart:
+	docker restart nginx wordpress mariadb; 
+
 re: prune all
 
-.PHONY: all permission env-check config up down prune re
+.PHONY: all permission-check env-check config up down prune re start stop restart 

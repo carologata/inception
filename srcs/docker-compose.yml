@@ -23,7 +23,7 @@ networks:
 services:
 
   nginx:
-    image: nginx:42project
+    image: nginx:42
     container_name: nginx
     env_file:
       - .env
@@ -45,7 +45,7 @@ services:
     restart: always
 
   wordpress:
-    image: wordpress:42project
+    image: wordpress:42
     container_name: wordpress
     env_file:
       - .env
@@ -79,7 +79,7 @@ services:
     restart: always
 
   mariadb:
-    image: mariadb:42project
+    image: mariadb:42
     container_name: mariadb
     env_file:
       - .env
